@@ -1,0 +1,519 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>N-QUEENS • LUXURY SOLVER • DFS BACKTRACKING</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+      font-family: 'Inter', 'SF Pro Display', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    /* glassmorphic luxury container */
+    .queens-app {
+      max-width: 1300px;
+      width: 100%;
+      background: rgba(12, 18, 28, 0.65);
+      backdrop-filter: blur(12px);
+      border-radius: 3.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 2rem 2rem 2.5rem;
+      transition: all 0.3s ease;
+    }
+
+    /* header section */
+    .hero {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .hero h1 {
+      font-size: 3.2rem;
+      font-weight: 600;
+      background: linear-gradient(135deg, #f0e6d0, #c0b59e, #e8dccc);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      letter-spacing: -0.02em;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .hero .sub {
+      color: #9aa8b9;
+      font-weight: 450;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      letter-spacing: 0.3px;
+      border-bottom: 1px dashed rgba(255, 215, 150, 0.3);
+      display: inline-block;
+      padding-bottom: 0.3rem;
+    }
+
+    /* controls grid */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 1rem 1.8rem;
+      border-radius: 3rem;
+      backdrop-filter: blur(4px);
+    }
+
+    .ctrl-group {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(20, 28, 38, 0.7);
+      padding: 0.5rem 1.2rem;
+      border-radius: 3rem;
+      border: 1px solid rgba(255, 200, 130, 0.2);
+    }
+
+    .ctrl-group label {
+      font-weight: 500;
+      color: #ecd9b4;
+      font-size: 0.9rem;
+    }
+
+    input[type="number"] {
+      background: #0f121c;
+      border: 1px solid #3e3f4e;
+      color: #ffe6c7;
+      font-size: 1rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 2rem;
+      width: 85px;
+      text-align: center;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #e7b874;
+      box-shadow: 0 0 12px rgba(231, 184, 116, 0.3);
+    }
+
+    button {
+      background: linear-gradient(95deg, #2a2f3f, #1e212e);
+      border: none;
+      padding: 0.6rem 1.5rem;
+      border-radius: 2.5rem;
+      font-weight: 600;
+      color: #f2e5d2;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      border: 0.5px solid rgba(255, 215, 140, 0.3);
+    }
+
+    button:hover {
+      background: linear-gradient(95deg, #3e445b, #2a2f40);
+      transform: translateY(-2px);
+      border-color: #e7b874;
+      color: #fff0df;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .stats {
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 2rem;
+      padding: 0.8rem 1.5rem;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #cddde9;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(5px);
+    }
+
+    .stats span {
+      font-weight: 700;
+      color: #f7cf9f;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 0.2rem 0.7rem;
+      border-radius: 2rem;
+      font-family: monospace;
+      font-size: 1rem;
+    }
+
+    /* board container */
+    .board-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .chessboard {
+      display: grid;
+      background: #231f1b;
+      border-radius: 2rem;
+      padding: 0.5rem;
+      box-shadow: 0 20px 35px -12px black;
+      border: 1px solid rgba(230, 200, 120, 0.4);
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      transition: all 0.1s ease;
+      background-size: cover;
+      font-weight: 500;
+      text-shadow: 0 2px 4px black;
+    }
+
+    .queen-symbol {
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+      font-size: 2rem;
+    }
+
+    /* solution navigation */
+    .solution-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      margin: 1.8rem 0 1rem;
+    }
+
+    .nav-btn {
+      background: #1f2533;
+      padding: 0.5rem 1.2rem;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .solution-counter {
+      font-weight: 600;
+      background: #0f1119;
+      padding: 0.4rem 1.4rem;
+      border-radius: 2rem;
+      color: #e2caa3;
+    }
+
+    .json-output {
+      background: #05080fcc;
+      border-radius: 1.5rem;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: #bcd0f0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 140px;
+      border: 1px solid #2f3545;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 680px) {
+      .queens-app {
+        padding: 1.2rem;
+      }
+
+      .hero h1 {
+        font-size: 2rem;
+      }
+
+      .cell {
+        font-size: 1.5rem;
+      }
+
+      .queen-symbol {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="queens-app">
+    <div class="hero">
+      <h1>♕ N·QUEENS <span style="font-weight:300">|</span> DFS ORACLE</h1>
+      <div class="sub">backtracking • diagonal isolation • zero conflicts</div>
+    </div>
+
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>⚙️ N value</label>
+        <input type="number" id="nInput" min="1" max="12" value="4" step="1">
+      </div>
+      <button id="solveBtn">✨ SOLVE & RENDER</button>
+      <button id="resetBtn">⟳ RESET BOARD</button>
+    </div>
+
+    <div class="stats">
+      <div>📐 Board: <span id="boardSizeSpan">4</span>×<span>4</span></div>
+      <div>💎 Total solutions: <span id="totalSolutionsSpan">0</span></div>
+      <div>🔍 DFS explored states: <span id="statesSpan">0</span></div>
+    </div>
+
+    <div class="board-container">
+      <div id="dynamicBoard" class="chessboard"></div>
+    </div>
+
+    <div class="solution-nav">
+      <button id="prevBtn" class="nav-btn">◀ PREV</button>
+      <div class="solution-counter">solution <span id="currentSolIdx">0</span> / <span id="maxSolIdx">0</span></div>
+      <button id="nextBtn" class="nav-btn">NEXT ▶</button>
+    </div>
+
+    <div class="json-output" id="solutionDump">
+      💡 click SOLVE — solutions will appear here as arrays [row0_col, row1_col, ...]
+    </div>
+  </div>
+
+  <script>
+    // ------------------------------
+    //  CORE N-QUEENS ALGORITHM (DFS)
+    // ------------------------------
+    class NQueensSolver {
+      constructor(n) {
+        this.n = n;
+        this.solutions = []; // list of board configs (array of column indices)
+        this.statesExplored = 0;
+      }
+      solve() {
+        this.solutions = [];
+        if (this.n < 1) return [];
+        const board = new Array(this.n).fill(-1);
+        this.statesExplored = 0;
+        this.dfs(board, 0);
+        return this.solutions;
+      }
+      isValid(board, row, col) {
+        for (let i = 0; i < row; i++) {
+          if (board[i] === col) return false;
+          if (Math.abs(board[i] - col) === Math.abs(i - row)) return false;
+        }
+        return true;
+      }
+      dfs(board, row) {
+        this.statesExplored++;
+        if (row === this.n) {
+          this.solutions.push([...board]);
+          return;
+        }
+        for (let col = 0; col < this.n; col++) {
+          if (this.isValid(board, row, col)) {
+            board[row] = col;
+            this.dfs(board, row + 1);
+            board[row] = -1; // backtrack
+          }
+        }
+      }
+      getSolutionsCount() {
+        return this.solutions.length;
+      }
+    }
+    // ------------------------------
+    //  UI RENDER ENGINE
+    // ------------------------------
+    let currentSolutions = []; // array of column vectors
+    let currentIdx = 0;
+    let currentN = 4;
+    let lastExploredStates = 0;
+    const boardContainer = document.getElementById('dynamicBoard');
+    const nInput = document.getElementById('nInput');
+    const solveBtn = document.getElementById('solveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const totalSolutionsSpan = document.getElementById('totalSolutionsSpan');
+    const statesSpan = document.getElementById('statesSpan');
+    const boardSizeSpan = document.getElementById('boardSizeSpan');
+    const currentSolIdxSpan = document.getElementById('currentSolIdx');
+    const maxSolIdxSpan = document.getElementById('maxSolIdx');
+    const solutionDump = document.getElementById('solutionDump');
+    // Queen icon (luxury)
+    const QUEEN_HTML = `<span class="queen-symbol">♕</span>`;
+
+    function renderBoardFromConfig(config, n) {
+      if (!config || config.length !== n) {
+        // fallback empty board
+        boardContainer.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+        boardContainer.innerHTML = '';
+        for (let r = 0; r < n; r++) {
+          for (let c = 0; c < n; c++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            const isDark = (r + c) % 2 === 0;
+            cell.style.backgroundColor = isDark ? '#ebd5b3' : '#b58863';
+            cell.style.boxShadow = 'inset 0 0 0 1px rgba(0,0,0,0.1)';
+            cell.innerHTML = '';
+            boardContainer.appendChild(cell);
+          }
+        }
+        return;
+      }
+      boardContainer.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+      boardContainer.innerHTML = '';
+      for (let row = 0; row < n; row++) {
+        const queenCol = config[row];
+        for (let col = 0; col < n; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          const isDark = (row + col) % 2 === 0;
+          cell.style.backgroundColor = isDark ? '#ecd9b4' : '#a57148';
+          cell.style.borderRadius = '6px';
+          cell.style.transition = 'all 0.05s linear';
+          if (queenCol === col) {
+            cell.innerHTML = QUEEN_HTML;
+            cell.style.textShadow = '0 0 5px gold';
+          } else {
+            cell.innerHTML = '';
+          }
+          boardContainer.appendChild(cell);
+        }
+      }
+    }
+
+    function renderEmptyBoard(n) {
+      const emptyConfig = new Array(n).fill(-1);
+      renderBoardFromConfig(emptyConfig, n);
+    }
+
+    function updateSolutionMetadata() {
+      const total = currentSolutions.length;
+      totalSolutionsSpan.innerText = total;
+      maxSolIdxSpan.innerText = total;
+      statesSpan.innerText = lastExploredStates;
+      boardSizeSpan.innerText = currentN;
+      if (total > 0) {
+        currentSolIdxSpan.innerText = currentIdx + 1;
+        const prettyJson = JSON.stringify(currentSolutions.map(sol => sol));
+        solutionDump.innerHTML = `📜 ALL SOLUTIONS (${total}) — DFS backtracking<br>${prettyJson}`;
+      } else {
+        currentSolIdxSpan.innerText = 0;
+        solutionDump.innerHTML = total === 0 ? `∅ No solutions for N = ${currentN} (n<1 or impossible e.g., 2,3).` : `✨ solutions ready. Use arrows.`;
+      }
+    }
+
+    function displayCurrentSolution() {
+      if (currentSolutions.length === 0) {
+        renderEmptyBoard(currentN);
+        return;
+      }
+      if (currentIdx < 0) currentIdx = 0;
+      if (currentIdx >= currentSolutions.length) currentIdx = currentSolutions.length - 1;
+      const solution = currentSolutions[currentIdx];
+      renderBoardFromConfig(solution, currentN);
+      updateSolutionMetadata();
+    }
+
+    function solveAndRender() {
+      let n = parseInt(nInput.value, 10);
+      if (isNaN(n)) n = 4;
+      if (n < 1) {
+        currentSolutions = [];
+        currentN = n;
+        lastExploredStates = 0;
+        renderEmptyBoard(n);
+        updateSolutionMetadata();
+        return;
+      }
+      if (n > 12) {
+        n = 12;
+        nInput.value = 12;
+      }
+      currentN = n;
+      const solver = new NQueensSolver(n);
+      const solutions = solver.solve();
+      currentSolutions = solutions;
+      lastExploredStates = solver.statesExplored;
+      currentIdx = 0;
+      if (currentSolutions.length > 0) {
+        renderBoardFromConfig(currentSolutions[0], currentN);
+      } else {
+        renderEmptyBoard(currentN);
+      }
+      updateSolutionMetadata();
+    }
+
+    function nextSolution() {
+      if (currentSolutions.length === 0) return;
+      currentIdx = (currentIdx + 1) % currentSolutions.length;
+      renderBoardFromConfig(currentSolutions[currentIdx], currentN);
+      currentSolIdxSpan.innerText = currentIdx + 1;
+      updateSolutionMetadata();
+    }
+
+    function prevSolution() {
+      if (currentSolutions.length === 0) return;
+      currentIdx = (currentIdx - 1 + currentSolutions.length) % currentSolutions.length;
+      renderBoardFromConfig(currentSolutions[currentIdx], currentN);
+      currentSolIdxSpan.innerText = currentIdx + 1;
+      updateSolutionMetadata();
+    }
+
+    function resetToCurrentN() {
+      const n = currentN;
+      const solver = new NQueensSolver(n);
+      const solutions = solver.solve();
+      currentSolutions = solutions;
+      lastExploredStates = solver.statesExplored;
+      currentIdx = 0;
+      if (currentSolutions.length) {
+        renderBoardFromConfig(currentSolutions[0], currentN);
+      } else {
+        renderEmptyBoard(currentN);
+      }
+      updateSolutionMetadata();
+    }
+    // event binding
+    solveBtn.addEventListener('click', () => {
+      solveAndRender();
+    });
+    resetBtn.addEventListener('click', () => {
+      solveAndRender(); // recompute fresh
+    });
+    prevBtn.addEventListener('click', prevSolution);
+    nextBtn.addEventListener('click', nextSolution);
+    nInput.addEventListener('change', () => {
+      let val = parseInt(nInput.value, 10);
+      if (val > 12) nInput.value = 12;
+      if (val < 1) nInput.value = 1;
+      solveAndRender();
+    });
+    // INIT with N=4 (classic)
+    (function init() {
+      const initN = 4;
+      nInput.value = initN;
+      currentN = initN;
+      const solver = new NQueensSolver(initN);
+      currentSolutions = solver.solve();
+      lastExploredStates = solver.statesExplored;
+      currentIdx = 0;
+      if (currentSolutions.length) renderBoardFromConfig(currentSolutions[0], initN);
+      else renderEmptyBoard(initN);
+      updateSolutionMetadata();
+    })();
+  </script>
+</body>
+
+</html>
